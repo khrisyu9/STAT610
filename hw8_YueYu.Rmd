@@ -1,5 +1,5 @@
 ---
-title: "Stat S610. Fall 2021. Homework 7."
+title: "Stat S610. Fall 2021. Homework 8."
 author: "Womack"
 date: "10/22/2021"
 output: 
@@ -18,7 +18,7 @@ header-includes:
 ## Preliminaries 
 ```{r}
 set.seed(1234567890L)
-setwd('/Users/wangshiying/Desktop/HW7')
+setwd('E:/IU/21Fall/STAT610/Git')
 source('graph_connectedness_functions.R')
 ```
 
