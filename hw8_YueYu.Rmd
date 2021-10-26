@@ -1,0 +1,307 @@
+---
+title: "Stat S610. Fall 2021. Homework 7."
+author: "Womack"
+date: "10/22/2021"
+output: 
+  pdf_document:
+    keep_tex: false
+    latex_engine: pdflatex
+    fig_caption: true
+    number_sections: true
+    
+fontsize: 11pt
+geometry: margin=0.75in
+header-includes:
+  - \usepackage{amsmath,amsthm,amssymb,mathrsfs,verbatim}
+---
+
+## Preliminaries 
+```{r}
+set.seed(1234567890L)
+setwd('/Users/wangshiying/Desktop/HW7')
+source('graph_connectedness_functions.R')
+```
+
+## 1. Adjacency matrix powers
+```{r}
+# load expm package
+library(expm)
+```
+
+```{r}
+x_1 = generate_graph(n=150)
+```
+
+```{r}
+Rprof(interval = 1e-3, filename = "hw7q1.out")
+model1_1 = graph_connectedness_fun_1(x_1)
+Rprof()
+```
+
+```{r}
+q1_summary = summaryRprof('hw7q1.out')
+q1_summary$sampling.time
+head(q1_summary$by.total, 20)
+```
+We can see that the "%^%" operation takes the most time of the function, it takes 100% of the computational effort.
+
+## 2. State tracing
+```{r}
+Rprof(interval = 1e-2, filename = "hw7q2.out")
+model2_1 = graph_connectedness_fun_2(x_1)
+Rprof()
+```
+
+```{r}
+q2_summary = summaryRprof('hw7q2.out')
+q2_summary$sampling.time
+head(q2_summary$by.total, 20)
+```
+We can see that the second function is more efficient thant the first one, the ratio of computational times is 20%.
+
+```{r}
+x_2 = generate_graph(n=500)
+```
+
+```{r}
+model2_2 = graph_connectedness_fun_2(x_2)
+model1_2 = graph_connectedness_fun_1(x_2)
+print(model2_2)
+print(model1_2)
+```
+It's confirmed that using the second function on x_2 returns NA while using the first function does not (it returns TRUE). The reason is that the last loop is not nrow == 1.
+
+## 3. Signing the state 
+```{r}
+model3_2 = graph_connectedness_fun_3(x_2)
+print(model3_2)
+```
+It's confirmed that the third function returns TRUE instead of NA. 
+```{r}
+Rprof(interval = 1e-2, filename = "hw7q3.out")
+model3_2 = graph_connectedness_fun_3(x_2)
+Rprof()
+```
+
+```{r}
+q3_summary = summaryRprof('hw7q3.out')
+q3_summary$sampling.time
+head(q3_summary$by.total, 20)
+```
+We can see that the %*% function takes the most computational effort. 
+
+```{r}
+x_3 = generate_graph(n=1000)
+```
+
+```{r}
+Rprof(interval = 1e-2, filename = "hw7q3_3.out")
+model3_3 = graph_connectedness_fun_3(x_3)
+Rprof()
+```
+
+```{r}
+system.time(graph_connectedness_fun_3(x_3))
+```
+
+```{r}
+q3_3_summary = summaryRprof('hw7q3_3.out')
+q3_3_summary$sampling.time
+head(q3_3_summary$by.total, 20)
+```
+The time is 0.01 to determine whether x_3 is connected, and it's okay for me. Operation %*% takes the most of the compuational effort.
+
+## 4. Early exit when connected
+```{r}
+Rprof(interval = 1e-2, filename = "hw7q4.out")
+model4_3 = graph_connectedness_fun_4(x_3)
+Rprof()
+```
+
+```{r}
+q4_summary = summaryRprof('hw7q4.out')
+q4_summary$sampling.time
+head(q4_summary$by.total, 20)
+```
+We can see that the top five operations are "any", "parent.env", "all.equal.numeric", "all.equal" and "cmp".
+
+```{r}
+x_4 = generate_graph(n=1000, force_disconnected = TRUE)
+```
+
+```{r}
+system.time(graph_connectedness_fun_4(x_4))
+```
+The time is 0.009 to determine whether x_4 is connected, and it's okay for me. 
+
+## 5. Early exit when stable
+```{r}
+system.time(graph_connectedness_fun_5(x_3))
+system.time(graph_connectedness_fun_5(x_4))
+```
+The time are 0.002 and 0.009 to determine whether x_3 and x_4 are connected, and they seem reasonable to me. 
+
+```{r}
+x_5 = generate_graph(n=5000)
+```
+
+```{r}
+Rprof(interval = 1e-2, filename = "hw7q5.out")
+model5_5 = graph_connectedness_fun_5(x_5)
+Rprof()
+```
+
+```{r}
+q5_summary = summaryRprof('hw7q5.out')
+q5_summary$sampling.time
+head(q5_summary$by.total, 20)
+```
+We can see that the top five operations in terms of computational effort are "standardGeneric", "all.equal.numeric", "all.equal", "isSymmetric.matrix" and "isSymmetric". "%*%" ranks 11th for total time spent in computation, which counts for 8%.
+
+## 6. Getting rid of most costly input check
+```{r}
+system.time(graph_connectedness_fun_6(x_5))
+```
+The time is 0.049 to determine whether x_5 is connected, and it's a bit too long for me. 
+
+```{r}
+x_6 = generate_graph(n=10000)
+```
+
+```{r}
+Rprof(interval = 1e-2, filename = "hw7q6.out")
+model6_6 = graph_connectedness_fun_6(x_6)
+Rprof()
+```
+
+```{r}
+q6_summary = summaryRprof('hw7q6.out')
+q6_summary$sampling.time
+head(q6_summary$by.total, 20)
+```
+We can see that the top five operations in terms of computational effort are "diag", "standardGeneric", "%*%", "any" and "grep". "%*%" ranks 3rd for total time spent in computation, which counts for 24.73%.
+
+## 7. Getting rid of adding self loops
+```{r}
+system.time(graph_connectedness_fun_7(x_6))
+```
+The time is 0.587 to determine whether x_6 is connected, which is too long for me. 
+
+```{r}
+x_7 = generate_graph(n=10000, force_disconnected = TRUE)
+```
+
+```{r}
+Rprof(interval = 1e-2, filename = "hw7q7.out")
+model7_7 = graph_connectedness_fun_7(x_7)
+Rprof()
+```
+
+```{r}
+q7_summary = summaryRprof('hw7q7.out')
+q7_summary$sampling.time
+head(q7_summary$by.total, 20)
+```
+We can see that the top operations in terms of computational effort are "%*%" and "any". "%*%" ranks 1st for total time spent in computation, which counts for 66.67%.
+
+## 8. Getting rid of next most costly input check
+```{r}
+system.time(graph_connectedness_fun_8(x_6))
+system.time(graph_connectedness_fun_8(x_7))
+```
+The time are 0.610 and 0.537 to determine whether x_6 and x_7 connected, which are too long for me. 
+
+```{r}
+x_8 = generate_graph(n=500, force_linear = TRUE)
+```
+
+```{r}
+Rprof(interval = 1e-2, filename = "hw7q8.out")
+model8_8 = graph_connectedness_fun_8(x_8)
+Rprof()
+```
+
+```{r}
+q8_summary = summaryRprof('hw7q8.out')
+q8_summary$sampling.time
+head(q8_summary$by.total, 20)
+```
+We can see that the top operations in terms of computational effort are "%*%", "structure, "<Anonymous>" and "object.size". "%*%" ranks 1st for total time spent in computation, which counts for 97.22%.
+
+## 9. Moving to accessing with logicals
+```{r}
+system.time(graph_connectedness_fun_9(x_6))
+system.time(graph_connectedness_fun_9(x_7))
+system.time(graph_connectedness_fun_9(x_8))
+```
+The time are 0.104, 0.074 and 0.036 to determine whether x_6, x_7 and x_8 are connected, which are reasonable for me compared with previous functions. 
+
+```{r}
+x_9 = generate_graph(n=20000)
+```
+
+```{r}
+Rprof(interval = 1e-2, filename = "hw7q9.out")
+model9_9 = graph_connectedness_fun_9(x_9)
+Rprof()
+```
+
+```{r}
+q9_summary = summaryRprof('hw7q9.out')
+q9_summary$sampling.time
+head(q9_summary$by.total, 20)
+```
+We can see that the top operation in terms of computational effort is ".rowSums". ".rowSums" takes 100% time of the computational effort.
+
+## 10. Moving to accessing using integer vectors
+```{r}
+system.time(graph_connectedness_fun_10(x_6))
+system.time(graph_connectedness_fun_10(x_7))
+system.time(graph_connectedness_fun_10(x_8))
+system.time(graph_connectedness_fun_10(x_9))
+```
+The time are 0.163, 0.092， 0.060 and 0.691 to determine whether x_6, x_7, x_8 and x_9 are connected, which are reasonable for me compared with previous functions. 
+
+```{r}
+x_10 = generate_graph(n=20000, force_disconnected = TRUE)
+```
+
+```{r}
+Rprof(interval = 1e-2, filename = "hw7q10.out")
+model10_10 = graph_connectedness_fun_10(x_10)
+Rprof()
+```
+
+```{r}
+q10_summary = summaryRprof('hw7q10.out')
+q10_summary$sampling.time
+head(q10_summary$by.total, 20)
+```
+We can see that the top operations in terms of computational effort are ".rowSums", "sort", "standardGeneric", "unique" and "which". ".rowSums" takes 100% time of the computational effort.
+
+## 11. Moving to eliminating rows
+```{r}
+system.time(graph_connectedness_fun_9_v2(x_6))
+system.time(graph_connectedness_fun_9_v2(x_7))
+system.time(graph_connectedness_fun_9_v2(x_8))
+system.time(graph_connectedness_fun_9_v2(x_9))
+system.time(graph_connectedness_fun_9_v2(x_10))
+```
+The time are 0.043, 0.070，0.022, 0.163 and 0.142 to determine whether x_6, x_7, x_8, x_9 and x_10 are connected, which are reasonable for me compared with previous functions. 
+
+```{r}
+x_11 = generate_graph(n=1000, force_linear = TRUE)
+```
+
+```{r}
+Rprof(interval = 1e-2, filename = "hw7q11.out")
+model11_11 = graph_connectedness_fun_9_v2(x_11)
+Rprof()
+```
+
+```{r}
+q11_summary = summaryRprof('hw7q11.out')
+q11_summary$sampling.time
+head(q11_summary$by.total, 20)
+```
+We can see that the top operation in terms of computational effort is ".rowSums". ".rowSums" takes 100% time of the computational effort. I prefer the last function, graph_connectedness_fun_9_v2(), which seems to be the most efficient one among all. 
